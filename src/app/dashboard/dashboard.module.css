@@ -1,0 +1,137 @@
+.container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--background);
+}
+
+.sidebar {
+    width: 260px;
+    background-color: var(--card-bg);
+    border-right: 1px solid var(--card-border);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    flex-shrink: 0;
+}
+
+.logoArea {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.logoArea h2 {
+    color: var(--color-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.roleLabel {
+    display: inline-block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(var(--primary-hue), 70%, 60%, 0.1);
+    color: var(--color-primary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.navSection {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--foreground);
+    opacity: 0.5;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    padding-left: 0.75rem;
+    font-weight: 600;
+}
+
+.navItem {
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    color: var(--foreground);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.navItem:hover {
+    background-color: rgba(var(--primary-hue), 70%, 60%, 0.05);
+    color: var(--color-primary);
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+.userArea {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--card-border);
+}
+
+.userEmail {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.logoutBtn {
+    background: none;
+    border: none;
+    color: var(--error);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.logoutBtn:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.mainContent {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .mainContent {
+        padding: 1rem;
+    }
+}

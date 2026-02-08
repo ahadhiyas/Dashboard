@@ -1,0 +1,15 @@
+<svg width="200" height="80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3ecd8d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2ab775;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Leaf Symbol -->
+  <path d="M100 10 Q120 10 130 30 Q140 50 120 60 Q100 60 90 40 Q80 20 100 10 Z" fill="url(#grad1)" opacity="0.8"/>
+  <path d="M100 10 Q80 10 70 30 Q60 50 80 60 Q100 60 110 40 Q120 20 100 10 Z" fill="url(#grad1)" opacity="0.6"/>
+  
+  <!-- Text -->
+  <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#3ecd8d" font-weight="bold">Ahadhiyas</text>
+  <text x="50%" y="75%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#2ab775" letter-spacing="2">SUPERFOODS</text>
+</svg>

@@ -1,0 +1,165 @@
+.formContainer {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.saveBtn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cancelBtn {
+    background: transparent;
+    color: var(--foreground);
+    border: 1px solid var(--card-border);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.section {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--foreground);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.inputGroup label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.inputGroup input,
+.inputGroup textarea {
+    padding: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.checkboxGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: auto;
+    padding-bottom: 0.75rem;
+}
+
+.skuList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.skuCard {
+    background: var(--background);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+}
+
+.skuHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    opacity: 0.7;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 0.5rem;
+}
+
+.deleteSkuBtn {
+    color: var(--error);
+    background: none;
+    border: none;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.addSkuBtn {
+    color: var(--color-primary);
+    background: rgba(var(--primary-hue), 70%, 60%, 0.1);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.costSummary {
+    grid-column: 1 / -1;
+    background: rgba(var(--success), 0.1);
+    color: var(--success);
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    text-align: right;
+    margin-top: 0.5rem;
+}
+
+.errorBanner {
+    background: var(--error);
+    color: white;
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+}
