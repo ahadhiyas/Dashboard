@@ -1,39 +1,116 @@
-
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 
-export async function getDashboardStats() {
+export async function getDashboardStats(searchParams?: { from?: string, to?: string }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) return null
 
-    // Check Role
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
+    // Date Filter Logic
+    const now = new Date()
+    // Default to this month if not specified
+    const defaultFrom = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    const defaultTo = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString() // End of month
 
-    const role = profile?.role || 'DISTRIBUTOR'
+    const dateFrom = searchParams?.from ? new Date(searchParams.from).toISOString() : defaultFrom
+    const dateTo = searchParams?.to ? new Date(searchParams.to).toISOString() : defaultTo
 
-    if (role === 'ADMIN') {
-        return getAdminStats(supabase)
-    } else if (role === 'REFERRER') {
-        // For referrers, we might just redirect them to their specific view, 
-        // or return stats here if we unify the dashboard page.
-        // Let's redirect for cleaner separation.
-        // Note: Calling redirect inside a server action that populates a component might be tricky if component expects data.
-        // But since this is called by the Page component, we can return a flag or redirect.
-        // Actually, we can just return stats tailored for Referrer.
-        return { role: 'REFERRER', stats: [], recentSales: [] } // The Page component will handle or we just add the UI there?
-        // Better: The `DashboardPage` component should render `ReferrerDashboard` if role is Referrer.
-        // But `ReferrerDashboard` is a page...
-        // Let's keep it simple: generic dashboard shows basic info, or redirection happens at middleware/layout.
-    } else {
-        return getDistributorStats(supabase, user.id)
+    // Fetch Profile
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const role = profile?.role
+
+    // Base Response Structure
+    let stats = []
+    let recentActivity = []
+    let distributorOverview = [] // For Admin
+    let channelSales = [] // For Admin
+
+    if (role === 'DISTRIBUTOR') {
+        const { data: distributor } = await supabase
+            .from('distributors')
+            .select('id')
+            .eq('profile_id', user.id)
+            .single()
+
+        if (distributor) {
+            // 1. Fetch Orders in Date Range
+            const { data: orders } = await supabase
+                .from('orders')
+                .select(`
+                    *,
+                    order_items (
+                        quantity,
+                        price_per_unit,
+                        skus (
+                            calculated_vendor_cost
+                        )
+                    )
+                `)
+                .eq('distributor_id', distributor.id)
+                .gte('order_date', dateFrom)
+                .lte('order_date', dateTo)
+                .order('order_date', { ascending: false })
+
+            // 2. Calculate Stats
+            let totalSales = 0
+            let totalCost = 0
+            let totalReceived = 0
+
+            orders?.forEach((order: any) => {
+                totalSales += order.total_amount || 0
+                totalReceived += order.amount_received || 0
+
+                // Calculate Cost for Profit
+                order.order_items?.forEach((item: any) => {
+                    // Vendor Cost * Quantity
+                    const cost = (item.skus?.calculated_vendor_cost || 0) * item.quantity
+                    totalCost += cost
+                })
+            })
+
+            const totalProfit = totalSales - totalCost
+            const outstanding = totalSales - totalReceived
+            const collectionRate = totalSales > 0 ? (totalReceived / totalSales) * 100 : 0
+
+            stats = [
+                { label: 'Total Sales', value: totalSales, format: 'currency' },
+                { label: 'Total Profit', value: totalProfit, format: 'currency', alert: totalProfit < 0 }, // Profit might be negative if costs > sales? Unlikely but possible with weird data
+                { label: 'Outstanding', value: outstanding, format: 'currency', alert: outstanding > 0 }, // Outstanding is "Bad" if high, but alert logic depends on context.
+                { label: 'Collection Rate', value: `${collectionRate.toFixed(1)}%`, alert: collectionRate < 50 } // Alert if < 50%
+            ]
+
+            // 3. Recent Activity (Last 5 orders)
+            // Re-fetch or slice? slice is fine if we fetched enough. 
+            // We fetched ALL in range. If range is huge, this might be heavy.
+            // But for a dashboard, date range usually limits it.
+            // If we want GLOBAL recent activity regardless of date filter, we should do a separate query.
+            // Requirement: "log the recent activity - sales records ( last 5 )"
+            // Usually this means "What just happened". I will fetch the absolute last 5 independently.
+
+            const { data: recent } = await supabase
+                .from('orders')
+                .select('id, order_date, total_amount, amount_received, sales_channel, customer_name, supermarkets(name), order_items(skus(products(name), weight_label))')
+                .eq('distributor_id', distributor.id)
+                .order('order_date', { ascending: false })
+                .limit(5)
+
+            recentActivity = recent || []
+        }
+    } else if (role === 'ADMIN') {
+        const adminStats = await getAdminStats(supabase, dateFrom, dateTo)
+        return adminStats
+    }
+
+    return {
+        role,
+        stats,
+        recentSales: recentActivity,
+        distributorOverview, // Keep for admin if we didn't touch it
+        channelSales // Keep for admin
     }
 }
 
@@ -144,125 +221,134 @@ async function getDistributorStats(supabase: any, userId: string) {
     }
 }
 
-async function getAdminStats(supabase: any) {
-    // 1. Fetch Basic Counts
+async function getAdminStats(supabase: any, from: string, to: string) {
     const { count: distributorsCount } = await supabase.from('distributors').select('*', { count: 'exact', head: true })
     const { count: productsCount } = await supabase.from('products').select('*', { count: 'exact', head: true })
     const { count: referrersCount } = await supabase.from('referrers').select('*', { count: 'exact', head: true })
 
-    // 2. Fetch Distributors
-    const { data: distributors } = await supabase
-        .from('distributors')
-        .select('id, name')
+    // 1. Fetch Orders with Items for Calculations
+    const { data: allOrders } = await supabase
+        .from('orders')
+        .select(`
+            *,
+            distributors(id, name),
+            supermarkets(id, name),
+            order_items(
+                quantity,
+                price_per_unit,
+                skus(
+                    product_id,
+                    products(name),
+                    calculated_vendor_cost,
+                    packing_cost,
+                    weight_grams
+                )
+            )
+        `)
+        .eq('status', 'COMPLETED')
+        .gte('order_date', from)
+        .lte('order_date', to)
 
-    // 3. Fetch Inventory Events (for Stock Counts)
+    // 2. Metrics Calculation
+    let totalSales = 0
+    let totalProfit = 0
+    let totalOrders = 0
+
+    const distributorSales: Record<string, { name: string, sales: number, profit: number, orders: number }> = {}
+    const supermarketSales: Record<string, { name: string, sales: number, orders: number }> = {}
+    const productSales: Record<string, { name: string, quantity: number, sales: number }> = {}
+
+    allOrders?.forEach((order: any) => {
+        const orderTotal = order.total_amount || 0
+        totalSales += orderTotal
+        totalOrders += 1
+
+        let orderCost = 0
+
+        // Process Items
+        order.order_items?.forEach((item: any) => {
+            const sku = item.skus
+            // Cost = (Vendor Cost + Packing) * Qty
+            // Note: calculated_vendor_cost in SKU likely includes weight calc?
+            // "calculated_vendor_cost: number // Auto-calculated from product vendor_cost_per_kg"
+            // Let's assume calculated_vendor_cost is the cost per unit.
+            const costPerUnit = (sku?.calculated_vendor_cost || 0) + (sku?.packing_cost || 0)
+            orderCost += costPerUnit * item.quantity
+
+            // Product Stats
+            const prodName = sku?.products?.name || 'Unknown'
+            const prodId = sku?.product_id
+            if (prodId) {
+                if (!productSales[prodId]) productSales[prodId] = { name: prodName, quantity: 0, sales: 0 }
+                productSales[prodId].quantity += item.quantity
+                productSales[prodId].sales += (item.price_per_unit * item.quantity)
+            }
+        })
+
+        const orderProfit = orderTotal - orderCost
+        totalProfit += orderProfit
+
+        // Distributor Stats
+        const dId = order.distributor_id
+        const dName = order.distributors?.name || 'Unknown'
+        if (!distributorSales[dId]) distributorSales[dId] = { name: dName, sales: 0, profit: 0, orders: 0 }
+        distributorSales[dId].sales += orderTotal
+        distributorSales[dId].profit += orderProfit
+        distributorSales[dId].orders += 1
+
+        // Supermarket Stats
+        const sId = order.supermarket_id
+        if (sId) {
+            const sName = order.supermarkets?.name || 'Unknown'
+            if (!supermarketSales[sId]) supermarketSales[sId] = { name: sName, sales: 0, orders: 0 }
+            supermarketSales[sId].sales += orderTotal
+            supermarketSales[sId].orders += 1
+        }
+    })
+
+    // 3. Inventory Stock (Global)
+    // We need current stock. Inventory Events approach:
     const { data: inventoryEvents } = await supabase
         .from('inventory_events')
-        .select('distributor_id, type, quantity')
+        .select('quantity, type, sku_id, skus(products(name))')
 
-    // Aggregate Stock per Distributor
-    const distributorStockMap: Record<string, number> = {}
+    const stockMap: Record<string, { name: string, count: number }> = {}
     inventoryEvents?.forEach((e: any) => {
-        const qty = Number(e.quantity)
-        if (!distributorStockMap[e.distributor_id]) distributorStockMap[e.distributor_id] = 0
+        const flow = (e.type === 'IN' || e.type === 'OPENING' || e.type === 'RETURN') ? 1 : -1
+        const qty = e.quantity * flow
+        const skuId = e.sku_id
+        const prodName = e.skus?.products?.name || 'Unknown'
 
-        if (e.type === 'IN' || e.type === 'OPENING' || e.type === 'RETURN') {
-            distributorStockMap[e.distributor_id] += qty
-        } else if (e.type === 'SENT' || e.type === 'SOLD') {
-            distributorStockMap[e.distributor_id] -= qty
-        }
+        if (!stockMap[skuId]) stockMap[skuId] = { name: prodName, count: 0 }
+        stockMap[skuId].count += qty
     })
 
-    // 4. Fetch Pricing (for Commission/Profit Calc)
-    const { data: pricingData } = await supabase
-        .from('pricing')
-        .select('supermarket_id, sku_id, commission_type, commission_value')
+    // Sort Top Performers
+    const topDistributors = Object.values(distributorSales).sort((a, b) => b.sales - a.sales).slice(0, 5)
+    const topSupermarkets = Object.values(supermarketSales).sort((a, b) => b.sales - a.sales).slice(0, 5)
+    // Product sales by quantity or value? Requirement says "sales by products". Usually Value.
+    const topProducts = Object.values(productSales).sort((a, b) => b.sales - a.sales).slice(0, 5)
+    const maxProductSales = topProducts.length > 0 ? topProducts[0].sales : 0
 
-    const pricingMap: Record<string, { type: string, value: number }> = {}
-    pricingData?.forEach((p: any) => {
-        pricingMap[`${p.supermarket_id}_${p.sku_id}`] = {
-            type: p.commission_type,
-            value: p.commission_value
-        }
-    })
-
-    // 5. Fetch Sales (for Profit, Sales, Channels)
-    const { data: sales } = await supabase
-        .from('sales')
-        .select(`
-            distributor_id,
-            total_amount,
-            quantity,
-            sales_channel,
-            sku_id,
-            supermarket_id,
-            skus ( vendor_cost:calculated_vendor_cost, packing_cost, weight_grams )
-        `)
-
-    // Aggregate Sales & Profit per Distributor
-    const distributorSalesMap: Record<string, number> = {}
-    const distributorProfitMap: Record<string, number> = {}
-    const channelSalesMap: Record<string, number> = {}
-
-    sales?.forEach((sale: any) => {
-        const dId = sale.distributor_id
-        const saleValue = sale.total_amount || 0
-
-        // Sales Channel Aggregation
-        const channel = sale.sales_channel || 'Other'
-        channelSalesMap[channel] = (channelSalesMap[channel] || 0) + saleValue
-
-        // Distributor Sales Aggregation
-        distributorSalesMap[dId] = (distributorSalesMap[dId] || 0) + saleValue
-
-        // Profit Calculation
-        // @ts-ignore
-        const sku = Array.isArray(sale.skus) ? sale.skus[0] : sale.skus
-        const costPerUnit = (sku?.vendor_cost || 0) + (sku?.packing_cost || 0) // Note: vendor_cost is already calculated for the weight
-        const totalCost = costPerUnit * sale.quantity
-
-        // Commission
-        const pKey = `${sale.supermarket_id}_${sale.sku_id}`
-        const pricing = pricingMap[pKey]
-        let commissionAmount = 0
-        if (pricing) {
-            if (pricing.type === 'PERCENTAGE') {
-                commissionAmount = saleValue * (pricing.value / 100)
-            } else {
-                commissionAmount = pricing.value * sale.quantity
-            }
-        }
-
-        const netRevenue = saleValue - commissionAmount
-        const profit = netRevenue - totalCost
-
-        distributorProfitMap[dId] = (distributorProfitMap[dId] || 0) + profit
-    })
-
-    // Prepare Distributor Stats List
-    const distributorStats = distributors?.map((d: any) => ({
-        id: d.id,
-        name: d.name,
-        stockCount: distributorStockMap[d.id] || 0,
-        totalSales: distributorSalesMap[d.id] || 0,
-        totalProfit: distributorProfitMap[d.id] || 0
-    })) || []
-
-    // Prepare Channel Stats
-    const channelStats = Object.entries(channelSalesMap).map(([channel, amount]) => ({
-        channel,
-        amount
-    }))
+    // Low Stock Items (Arbitrary threshold < 50?)
+    const lowStock = Object.values(stockMap).filter(s => s.count < 50).sort((a, b) => a.count - b.count).slice(0, 5)
 
     return {
         role: 'ADMIN',
         stats: [
+            { label: 'Total Revenue', value: totalSales, format: 'currency' },
+            { label: 'Total Profit', value: totalProfit, format: 'currency', alert: totalProfit < 0 },
+            { label: 'Total Orders', value: totalOrders, format: 'number' },
             { label: 'Active Distributors', value: distributorsCount, format: 'number' },
-            { label: 'Total Products', value: productsCount, format: 'number' },
-            { label: 'Referrers', value: referrersCount, format: 'number' },
         ],
-        distributorOverview: distributorStats,
-        channelSales: channelStats,
-        recentSales: []
+        topDistributors,
+        topSupermarkets,
+        topProducts,
+        maxProductSales,
+        inventorySummary: {
+            lowStock
+        },
+        distributorOverview: Object.values(distributorSales), // Full list for table
+        // channelSales: ... we can add channel breakdown if needed, similar logic
     }
 }

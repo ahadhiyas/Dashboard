@@ -10,15 +10,21 @@ export default async function SupermarketsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return <div>Please log in</div>
 
+    // Check role
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const isAdmin = profile?.role === 'ADMIN'
+
     // RLS will handle filtering by auth.uid -> distributor -> supermarkets
     // But we need to make sure we are querying correctly
-    const { data: supermarkets, error } = await supabase
+    let query = supabase
         .from('supermarkets')
-        .select('*')
+        .select('*, distributors(name)')
         .order('created_at', { ascending: false })
 
+    const { data: supermarkets, error } = await query
+
     if (error) {
-        return <div style={{ padding: '2rem', color: 'red' }}>Error loading supermarkets. You might not be registered as a distributor.</div>
+        return <div style={{ padding: '2rem', color: 'red' }}>Error loading supermarkets. You might not be registered.</div>
     }
 
     return (
@@ -35,6 +41,7 @@ export default async function SupermarketsPage() {
                     <thead>
                         <tr>
                             <th>Name</th>
+                            {isAdmin && <th>Distributor</th>}
                             <th>Area</th>
                             <th>Contact Person</th>
                             <th>Phone</th>
@@ -46,6 +53,11 @@ export default async function SupermarketsPage() {
                         {supermarkets?.map((market) => (
                             <tr key={market.id}>
                                 <td>{market.name}</td>
+                                {isAdmin && (
+                                    <td style={{ fontSize: '0.85rem', color: 'var(--color-primary-dark)' }}>
+                                        {market.distributors?.name || '-'}
+                                    </td>
+                                )}
                                 <td>{market.area || '-'}</td>
                                 <td>{market.contact_person || '-'}</td>
                                 <td>{market.phone_no || '-'}</td>

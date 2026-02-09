@@ -200,7 +200,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             <div className={styles.section}>
                 <div className={styles.sectionHeader}>
                     <h3 className={styles.sectionTitle}>SKUs / Variants</h3>
-                    <button type="button" onClick={addSku} className={styles.addSkuBtn}>+ Add Variant</button>
+                    <button type="button" onClick={addSku} className={styles.addButton}>+ Add Variant</button>
                 </div>
 
                 <div className={styles.skuList}>

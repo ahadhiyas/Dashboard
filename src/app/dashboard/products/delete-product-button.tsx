@@ -1,15 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { deleteProduct } from './actions'
 import styles from './products.module.css'
-
 type DeleteProductButtonProps = {
-    productId: string
     productName: string
+    onDelete: () => Promise<void>
 }
 
-export default function DeleteProductButton({ productId, productName }: DeleteProductButtonProps) {
+export default function DeleteProductButton({ productName, onDelete }: DeleteProductButtonProps) {
     const [showConfirm, setShowConfirm] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const [error, setError] = useState('')
@@ -19,7 +17,8 @@ export default function DeleteProductButton({ productId, productName }: DeletePr
         setError('')
 
         try {
-            await deleteProduct(productId)
+            await onDelete()
+            // Optional: Reload logic is handled by server action revalidatePath
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete product')
             setIsDeleting(false)

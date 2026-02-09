@@ -8,9 +8,10 @@ import styles from '../products/product-form.module.css' // Reusing styles
 
 type SupermarketFormProps = {
     initialData?: SupermarketInput & { id: string }
+    distributors?: { id: string; name: string }[] // For admins
 }
 
-export default function SupermarketForm({ initialData }: SupermarketFormProps) {
+export default function SupermarketForm({ initialData, distributors }: SupermarketFormProps) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -23,6 +24,7 @@ export default function SupermarketForm({ initialData }: SupermarketFormProps) {
         phone_no: initialData?.phone_no || '',
         type: initialData?.type || undefined,
         comments: initialData?.comments || '',
+        distributor_id: initialData?.distributor_id || (distributors && distributors.length > 0 ? distributors[0].id : undefined)
     })
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -59,6 +61,21 @@ export default function SupermarketForm({ initialData }: SupermarketFormProps) {
             <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Details</h3>
                 <div className={styles.grid}>
+                    {distributors && (
+                        <div className={styles.inputGroup} style={{ gridColumn: '1 / -1' }}>
+                            <label>Distributor (Admin Only) *</label>
+                            <select
+                                required
+                                value={formData.distributor_id || ''}
+                                onChange={e => setFormData({ ...formData, distributor_id: e.target.value })}
+                            >
+                                <option value="">Select Distributor...</option>
+                                {distributors.map(d => (
+                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <div className={styles.inputGroup}>
                         <label>Supermarket Name *</label>
                         <input
@@ -122,11 +139,11 @@ export default function SupermarketForm({ initialData }: SupermarketFormProps) {
                 <div className={styles.inputGroup} style={{ marginTop: '1rem' }}>
                     <label>Comments</label>
                     <textarea
+                        className={styles.textarea}
                         value={formData.comments || ''}
                         onChange={e => setFormData({ ...formData, comments: e.target.value })}
                         placeholder="Additional notes or remarks"
                         rows={4}
-                        style={{ width: '100%', resize: 'vertical' }}
                     />
                 </div>
             </div>

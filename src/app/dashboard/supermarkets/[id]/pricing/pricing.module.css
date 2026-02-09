@@ -4,101 +4,119 @@
 }
 
 .header {
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .title {
-    font-size: 1.5rem;
-    color: var(--color-primary);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--foreground);
+    letter-spacing: -0.02em;
     margin-bottom: 0.5rem;
 }
 
 .subtitle {
     color: var(--foreground);
-    opacity: 0.7;
+    opacity: 0.6;
+    font-size: 0.95rem;
 }
 
 /* Form Styles */
 .formContainer {
     background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
     overflow: hidden;
+    margin-bottom: 3rem;
 }
 
 .actionsBar {
-    padding: 1rem;
-    background: var(--background);
-    border-top: 1px solid var(--card-border);
+    padding: 1.25rem 2rem;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
     position: sticky;
     bottom: 0;
     z-index: 10;
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .saveBtn {
-    background: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
     color: white;
     border: none;
-    padding: 0.75rem 2rem;
+    padding: 0.8rem 2rem;
     border-radius: var(--radius-sm);
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s ease;
     box-shadow: var(--shadow-sm);
 }
 
+.saveBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    opacity: 0.9;
+}
+
 .saveBtn:disabled {
-    opacity: 0.7;
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .table th,
 .table td {
-    padding: 1rem 0.75rem;
+    padding: 1.25rem 1rem;
     text-align: left;
-    border-bottom: 1px solid var(--card-border);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .table th {
-    background: rgba(var(--primary-hue), 70%, 60%, 0.05);
-    font-weight: 600;
-    font-size: 0.85rem;
+    background: rgba(62, 205, 141, 0.03);
+    font-weight: 700;
+    font-size: 0.75rem;
     color: var(--foreground);
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
 }
 
 .productRow {
-    background-color: var(--background);
-    font-weight: 600;
+    background-color: rgba(62, 205, 141, 0.03);
+    font-weight: 700;
     color: var(--color-primary-dark);
 }
 
 .skuRow:hover {
-    background-color: rgba(0, 0, 0, 0.01);
+    background-color: rgba(62, 205, 141, 0.01);
 }
 
-.input {
-    width: 100px;
-    padding: 0.5rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: var(--radius-sm);
-    font-family: inherit;
-}
-
+.input,
 .select {
-    padding: 0.5rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    width: 120px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--input-border);
     border-radius: var(--radius-sm);
-    font-family: inherit;
+    background: var(--input-bg);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.input:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px rgba(62, 205, 141, 0.1);
 }
 
 .netValue {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--success);
 }

@@ -43,7 +43,28 @@ async function getDistributorId(supabase: any) {
 
 export async function createSupermarket(data: SupermarketInput) {
     const supabase = await createClient()
-    const distributorId = await getDistributorId(supabase)
+
+    // For admins, data.distributor_id should be provided. 
+    // For distributors, we ignore data.distributor_id and fetch their own ID.
+    let distributorId = data.distributor_id
+
+    // If not provided (or we want to enforce security), get from auth
+    if (!distributorId) {
+        distributorId = await getDistributorId(supabase)
+    } else {
+        // If provided, ensure user is ADMIN. 
+        // getDistributorId returns null for ADMIN, so we can check that way or redundant check
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+            const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+            if (profile?.role !== 'ADMIN') {
+                // Force override for non-admins
+                distributorId = await getDistributorId(supabase)
+            }
+        }
+    }
+
+    if (!distributorId) throw new Error('Distributor ID is required')
 
     const { error } = await supabase
         .from('supermarkets')
@@ -67,18 +88,27 @@ export async function createSupermarket(data: SupermarketInput) {
 export async function updateSupermarket(id: string, data: SupermarketInput) {
     const supabase = await createClient()
 
-    // RLS protects us here, but good to be safe - standard update
+    // Check if Admin to allow updating distributor_id
+    const { data: { user } } = await supabase.auth.getUser()
+    let isAdmin = false
+    if (user) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        isAdmin = profile?.role === 'ADMIN'
+    }
+
+    const payload: any = {
+        name: data.name,
+        area: data.area,
+        location: data.location,
+        contact_person: data.contact_person,
+        phone_no: data.phone_no,
+        type: data.type,
+        comments: data.comments
+    }
+
     const { error } = await supabase
         .from('supermarkets')
-        .update({
-            name: data.name,
-            area: data.area,
-            location: data.location,
-            contact_person: data.contact_person,
-            phone_no: data.phone_no,
-            type: data.type,
-            comments: data.comments
-        })
+        .update(payload)
         .eq('id', id)
 
     if (error) throw new Error('Failed to update supermarket: ' + error.message)

@@ -55,17 +55,17 @@ export default async function DashboardLayout({
                             <div className={styles.navSection}>Admin</div>
                             <Link href="/dashboard/products" className={styles.navItem}>Products</Link>
                             <Link href="/dashboard/distributors" className={styles.navItem}>Distributors</Link>
+                            <Link href="/dashboard/supermarkets" className={styles.navItem}>Supermarkets</Link>
                             <Link href="/dashboard/inventory-global" className={styles.navItem}>Global Inventory</Link>
                         </>
                     )}
 
                     {role === 'DISTRIBUTOR' && (
                         <>
+                            <Link href="/dashboard/sales" className={styles.navItem}>Sales</Link>
                             <div className={styles.navSection}>Manage</div>
                             <Link href="/dashboard/my-inventory" className={styles.navItem}>My Inventory</Link>
                             <Link href="/dashboard/supermarkets" className={styles.navItem}>Supermarkets</Link>
-                            <Link href="/dashboard/sales" className={styles.navItem}>Sales</Link>
-                            <Link href="/dashboard/shipments" className={styles.navItem}>Shipments</Link>
                         </>
                     )}
                 </nav>

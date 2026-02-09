@@ -38,5 +38,56 @@ begin
   end if;
 end $$;
 
--- Add sales channel to sales table
-alter table sales add column if not exists sales_channel text check (sales_channel in ('Supermarket', 'Whatsapp', 'Instagram', 'Website', 'Other')) default 'Supermarket';
+-- SALES LOG & ORDER MANAGEMENT
+
+-- 1. Orders Table
+create table if not exists orders (
+  id uuid default uuid_generate_v4() primary key,
+  distributor_id uuid references distributors(id) on delete cascade not null,
+  order_ref text not null, -- e.g. "08-02-01"
+  sales_channel text not null check (sales_channel in ('Supermarket', 'Whatsapp', 'Instagram', 'Website', 'Other')),
+  customer_name text, -- For non-supermarket channels
+  supermarket_id uuid references supermarkets(id) on delete set null, -- For Supermarket channel
+  total_amount numeric not null default 0,
+  amount_received numeric default 0,
+  payment_status text check (payment_status in ('PAID', 'PENDING', 'CANCELLED')) default 'PENDING',
+  status text check (status in ('COMPLETED', 'CANCELLED')) default 'COMPLETED',
+  comments text,
+  order_date timestamp with time zone default timezone('utc'::text, now()) not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 2. Order Items Table
+create table if not exists order_items (
+  id uuid default uuid_generate_v4() primary key,
+  order_id uuid references orders(id) on delete cascade not null,
+  sku_id uuid references skus(id) on delete cascade not null,
+  quantity integer not null check (quantity > 0),
+  price_per_unit numeric not null, -- Snapshot price at time of order
+  total_price numeric not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS
+alter table orders enable row level security;
+alter table order_items enable row level security;
+
+-- Policies for Orders
+create policy "Admins manage all orders" on orders for all using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'ADMIN')
+);
+
+create policy "Distributors manage own orders" on orders for all using (
+  exists (select 1 from distributors where id = orders.distributor_id and profile_id = auth.uid())
+);
+
+-- Policies for Order Items
+create policy "Admins manage all order items" on order_items for all using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'ADMIN')
+);
+
+create policy "Distributors manage own order items" on order_items for all using (
+  exists (select 1 from orders where id = order_items.order_id and 
+    exists (select 1 from distributors where id = orders.distributor_id and profile_id = auth.uid())
+  )
+);

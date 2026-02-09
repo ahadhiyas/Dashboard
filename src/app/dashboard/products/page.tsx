@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import styles from './products.module.css'
 import DeleteProductButton from './delete-product-button'
+import { deleteProduct } from './actions'
 
 export default async function ProductsPage() {
     const supabase = await createClient()
@@ -47,8 +48,8 @@ export default async function ProductsPage() {
                                         Edit
                                     </Link>
                                     <DeleteProductButton
-                                        productId={product.id}
                                         productName={product.name}
+                                        onDelete={deleteProduct.bind(null, product.id)}
                                     />
                                 </td>
                             </tr>

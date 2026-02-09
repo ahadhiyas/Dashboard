@@ -7,12 +7,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .title {
-    font-size: 1.5rem;
-    color: var(--color-primary);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--foreground);
+    letter-spacing: -0.02em;
 }
 
 .actions {
@@ -20,31 +22,29 @@
     gap: 1rem;
 }
 
-.saveBtn {
-    background: var(--color-primary);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    cursor: pointer;
-}
-
 .cancelBtn {
     background: transparent;
     color: var(--foreground);
-    border: 1px solid var(--card-border);
-    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--border-color);
+    padding: 0.6rem 1.5rem;
     border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+    background: var(--background);
+    border-color: var(--foreground);
 }
 
 .section {
     background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius-md);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
     box-shadow: var(--shadow-sm);
 }
 
@@ -52,19 +52,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .sectionTitle {
     font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
+    font-weight: 700;
     color: var(--foreground);
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1.5rem;
 }
 
@@ -76,17 +77,36 @@
 
 .inputGroup label {
     font-size: 0.85rem;
-    font-weight: 500;
-    opacity: 0.8;
+    font-weight: 600;
+    color: var(--foreground);
+    opacity: 0.6;
 }
 
+/* Specific inputs/selects in this form */
 .inputGroup input,
-.inputGroup textarea {
-    padding: 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+.inputGroup select,
+.inputGroup textarea,
+.select,
+.input,
+.textarea {
+    width: 100%;
+}
+
+.textarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--input-border);
     border-radius: var(--radius-sm);
+    background: var(--input-bg);
+    color: var(--foreground);
     font-family: inherit;
     font-size: 0.95rem;
+    resize: vertical;
+    transition: all 0.2s ease;
+}
+
+.textarea:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 3px rgba(62, 205, 141, 0.15);
 }
 
 .fullWidth {
@@ -104,62 +124,107 @@
 .skuList {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .skuCard {
     background: var(--background);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
     padding: 1.5rem;
+    position: relative;
+    transition: border-color 0.2s ease;
+}
+
+.skuCard:hover {
+    border-color: rgba(62, 205, 141, 0.3);
 }
 
 .skuHeader {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1rem;
-    font-weight: 600;
-    font-size: 0.9rem;
-    opacity: 0.7;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--foreground);
+    opacity: 0.5;
     text-transform: uppercase;
-    border-bottom: 1px solid var(--card-border);
-    padding-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
 }
 
 .deleteSkuBtn {
     color: var(--error);
-    background: none;
+    background: transparent;
     border: none;
-    font-size: 0.8rem;
-    cursor: pointer;
-}
-
-.addSkuBtn {
-    color: var(--color-primary);
-    background: rgba(var(--primary-hue), 70%, 60%, 0.1);
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.deleteSkuBtn:hover {
+    opacity: 1;
+    text-decoration: underline;
 }
 
 .costSummary {
     grid-column: 1 / -1;
-    background: rgba(var(--success), 0.1);
-    color: var(--success);
-    padding: 0.75rem;
+    background: rgba(16, 185, 129, 0.08);
+    color: #065f46;
+    /* Deep green for contrast */
+    padding: 1rem;
     border-radius: var(--radius-sm);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 700;
     text-align: right;
-    margin-top: 0.5rem;
+    border-left: 3px solid var(--success);
 }
 
 .errorBanner {
     background: var(--error);
     color: white;
-    padding: 1rem;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 2rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+}
+
+.saveBtn,
+.addButton {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
     border-radius: var(--radius-sm);
-    margin-bottom: 1.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.saveBtn:hover,
+.addButton:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    opacity: 0.9;
+}
+
+.saveBtn:active,
+.addButton:active {
+    transform: translateY(0);
+}
+
+.saveBtn:disabled,
+.addButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #ccc;
 }

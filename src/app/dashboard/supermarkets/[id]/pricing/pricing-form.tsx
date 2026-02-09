@@ -37,7 +37,7 @@ export default function PricingForm({ supermarketId, products, existingPricing }
                     map[sku.id] = {
                         supermarket_id: supermarketId,
                         sku_id: sku.id,
-                        selling_price: sku.selling_price,
+                        selling_price: sku.min_selling_price || sku.basic_price || 0, // Fallback to basic_price if min_selling_price is missing
                         commission_type: 'PERCENTAGE',
                         commission_value: 0
                     }
@@ -114,7 +114,7 @@ export default function PricingForm({ supermarketId, products, existingPricing }
                                             {sku.weight_label}
                                         </td>
                                         <td style={{ opacity: 0.6 }}>
-                                            {sku.selling_price.toFixed(2)}
+                                            {sku.min_selling_price?.toFixed(2) || '0.00'}
                                         </td>
                                         <td>
                                             <input

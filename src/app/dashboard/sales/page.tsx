@@ -14,16 +14,36 @@ export default async function SalesPage() {
         .eq('profile_id', user.id)
         .single()
 
-    const { data: sales } = await supabase
-        .from('sales')
-        .select('*, supermarkets(name), skus(weight_label, products(name))')
-        .eq('distributor_id', distributor?.id)
-        .order('sale_date', { ascending: false })
+    // Check Admin
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const isAdmin = profile?.role === 'ADMIN'
+
+    // Fetch Orders
+    let query = supabase
+        .from('orders')
+        .select(`
+            *,
+            supermarkets (name),
+            order_items (
+                quantity,
+                skus (
+                    weight_label,
+                    products (name)
+                )
+            )
+        `)
+        .order('order_date', { ascending: false })
+
+    if (!isAdmin && distributor) {
+        query = query.eq('distributor_id', distributor.id)
+    }
+
+    const { data: orders } = await query
 
     return (
         <div>
             <div className={styles.header}>
-                <h1 className={styles.title}>Sales & Collections</h1>
+                <h1 className={styles.title}>Sales Log</h1>
                 <Link href="/dashboard/sales/new" className={styles.addButton}>
                     + Record Sale
                 </Link>
@@ -33,34 +53,70 @@ export default async function SalesPage() {
                 <table className={styles.table}>
                     <thead>
                         <tr>
+                            <th>Order ID</th>
                             <th>Date</th>
-                            <th>Supermarket</th>
-                            <th>Product</th>
-                            <th>Qty</th>
+                            <th>Channel</th>
+                            <th>Customer / Supermarket</th>
+                            <th>Items</th>
                             <th>Total Value</th>
-                            <th>Received</th>
-                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Comments</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {sales?.map((sale: any) => (
-                            <tr key={sale.id}>
-                                <td>{new Date(sale.sale_date).toLocaleDateString()}</td>
-                                <td>{sale.supermarkets?.name}</td>
-                                <td>{sale.skus?.products?.name} ({sale.skus?.weight_label})</td>
-                                <td>{sale.quantity}</td>
-                                <td>{sale.total_amount?.toFixed(2) || '-'}</td>
-                                <td>{sale.amount_received?.toFixed(2)}</td>
-                                <td style={{
-                                    color: (sale.total_amount - sale.amount_received) > 0.1 ? 'red' : 'green',
-                                    fontWeight: 'bold'
-                                }}>
-                                    {((sale.total_amount || 0) - sale.amount_received).toFixed(2)}
+                        {orders?.map((order: any) => (
+                            <tr key={order.id}>
+                                <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{order.order_ref}</td>
+                                <td>{new Date(order.order_date).toLocaleDateString()}</td>
+                                <td>
+                                    <span style={{
+                                        padding: '0.2rem 0.6rem',
+                                        borderRadius: '1rem',
+                                        fontSize: '0.75rem',
+                                        background: order.sales_channel === 'Supermarket' ? '#e3f2fd' : '#f3e5f5',
+                                        color: order.sales_channel === 'Supermarket' ? '#1565c0' : '#7b1fa2'
+                                    }}>
+                                        {order.sales_channel}
+                                    </span>
+                                </td>
+                                <td>
+                                    {order.sales_channel === 'Supermarket'
+                                        ? order.supermarkets?.name
+                                        : order.customer_name}
+                                </td>
+                                <td style={{ fontSize: '0.85rem' }}>
+                                    {order.order_items?.map((item: any, i: number) => (
+                                        <div key={i}>
+                                            {item.skus?.products?.name} ({item.skus?.weight_label}) x {item.quantity}
+                                        </div>
+                                    ))}
+                                </td>
+                                <td style={{ fontWeight: 'bold' }}>
+                                    {order.total_amount?.toFixed(2)}
+                                </td>
+                                <td>
+                                    <span style={{
+                                        color: order.payment_status === 'PAID' ? 'green' :
+                                            order.payment_status === 'CANCELLED' ? 'red' : 'orange',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        {order.payment_status}
+                                    </span>
+                                </td>
+                                <td style={{ maxWidth: '200px', fontSize: '0.8rem', color: '#666' }}>{order.comments || '-'}</td>
+                                <td>
+                                    <Link
+                                        href={`/dashboard/sales/${order.id}/edit`}
+                                        style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontSize: '0.85rem' }}
+                                    >
+                                        Edit
+                                    </Link>
                                 </td>
                             </tr>
                         ))}
-                        {sales?.length === 0 && (
-                            <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center' }}>No sales recorded.</td></tr>
+                        {orders?.length === 0 && (
+                            <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center' }}>No sales recorded.</td></tr>
                         )}
                     </tbody>
                 </table>

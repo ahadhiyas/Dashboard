@@ -31,14 +31,14 @@ export default function AddStockForm({ skus }: { skus: any[] }) {
     // Simplified for now: Just flat list
 
     return (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form onSubmit={handleSubmit} className={styles.formContainer} style={{ background: 'transparent', padding: 0, boxShadow: 'none', border: 'none' }}>
             <div className={styles.inputGroup}>
                 <label>Select Product Variant</label>
                 <select
                     required
+                    className={styles.select}
                     value={skuId}
                     onChange={e => setSkuId(e.target.value)}
-                    style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #ddd' }}
                 >
                     <option value="">-- Select --</option>
                     {skus.map((sku: any) => (
@@ -49,15 +49,15 @@ export default function AddStockForm({ skus }: { skus: any[] }) {
                 </select>
             </div>
 
-            <div className={styles.inputGroup}>
+            <div className={styles.inputGroup} style={{ marginTop: '1rem' }}>
                 <label>Quantity Received</label>
                 <input
                     type="number"
                     required
+                    className={styles.input}
                     value={qty}
                     onChange={e => setQty(e.target.value)}
                     placeholder="e.g. 50"
-                    style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #ddd' }}
                 />
             </div>
 
@@ -65,7 +65,7 @@ export default function AddStockForm({ skus }: { skus: any[] }) {
                 type="submit"
                 className={styles.saveBtn}
                 disabled={loading}
-                style={{ width: '100%', marginTop: '0.5rem' }}
+                style={{ width: '100%', marginTop: '1.5rem', padding: '0.75rem' }}
             >
                 {loading ? 'Adding...' : 'Add Stock'}
             </button>
