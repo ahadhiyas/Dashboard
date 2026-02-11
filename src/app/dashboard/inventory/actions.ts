@@ -120,7 +120,7 @@ export async function getGlobalInventory() {
     })
 
     // Result: List of { distributor, product, variant, stock }
-    const result = []
+    const result: any[] = []
     for (const key in stockMap) {
         const [distId, skuId] = key.split('_')
         const sku = skus.find((s: any) => s.id === skuId)

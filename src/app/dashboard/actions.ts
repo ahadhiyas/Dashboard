@@ -24,10 +24,10 @@ export async function getDashboardStats(searchParams?: { from?: string, to?: str
     const role = profile?.role
 
     // Base Response Structure
-    let stats = []
-    let recentActivity = []
-    let distributorOverview = [] // For Admin
-    let channelSales = [] // For Admin
+    let stats: any[] = []
+    let recentActivity: any[] = []
+    let distributorOverview: any[] = [] // For Admin
+    let channelSales: any[] = [] // For Admin
 
     if (role === 'DISTRIBUTOR') {
         const { data: distributor } = await supabase

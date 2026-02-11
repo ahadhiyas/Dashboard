@@ -79,7 +79,7 @@ export async function createOrder(data: OrderInput) {
 
     // 1. Calculate Totals & Prepare Items
     let totalOrderAmount = 0
-    const preparedItems = []
+    const preparedItems: any[] = []
 
     for (const item of data.items) {
         // Fetch SKU details to get current price if not provided
@@ -174,7 +174,7 @@ export async function updateOrder(id: string, data: OrderInput) {
 
     // 1. Recalculate Totals
     let totalOrderAmount = 0
-    const preparedItems = []
+    const preparedItems: any[] = []
 
     for (const item of data.items) {
         const { data: sku } = await supabase
